@@ -1,0 +1,409 @@
+/* ──────────────────────────────────────────────────
+   SDL Gallery Lightbox v1.0
+   square-design-lab/Gallery-Lightbox
+   ────────────────────────────────────────────────── */
+
+/* ── PhotoSwipe background override ─────────────── */
+.pswp.sdl-lightbox .pswp__bg {
+  background: var(--sdl-lb-bg, rgba(0,0,0,0.92)) !important;
+  opacity: 1 !important;
+}
+
+/* ── top bar ────────────────────────────────────── */
+.pswp.sdl-lightbox .pswp__top-bar {
+  background: transparent !important;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* ── counter ────────────────────────────────────── */
+.pswp.sdl-lightbox .pswp__counter {
+  color: var(--sdl-lb-counter-color, #fff);
+  font-size: var(--sdl-lb-counter-size, 14px);
+  opacity: 0.9;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  position: static;
+  margin-right: auto;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ── toolbar buttons base ───────────────────────── */
+.pswp.sdl-lightbox .pswp__button {
+  color: var(--sdl-lb-toolbar-color, #fff);
+  opacity: 0.85;
+  transition: opacity 0.2s, transform 0.15s;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pswp.sdl-lightbox .pswp__button:hover {
+  opacity: 1;
+}
+
+.pswp.sdl-lightbox .pswp__button:active {
+  transform: scale(0.92);
+}
+
+.pswp.sdl-lightbox .pswp__button svg {
+  width: var(--sdl-lb-toolbar-size, 22px);
+  height: var(--sdl-lb-toolbar-size, 22px);
+}
+
+/* ── custom toolbar buttons ─────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-btn {
+  color: var(--sdl-lb-toolbar-color, #fff);
+  opacity: 0.85;
+  transition: opacity 0.2s, transform 0.15s;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pswp.sdl-lightbox .sdl-lb-btn:hover {
+  opacity: 1;
+}
+
+.pswp.sdl-lightbox .sdl-lb-btn:active {
+  transform: scale(0.92);
+}
+
+.pswp.sdl-lightbox .sdl-lb-btn svg {
+  width: var(--sdl-lb-toolbar-size, 22px);
+  height: var(--sdl-lb-toolbar-size, 22px);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── close button ───────────────────────────────── */
+.pswp.sdl-lightbox .pswp__button--close {
+  color: var(--sdl-lb-close-color, #fff);
+  background: var(--sdl-lb-close-bg, transparent);
+  border: var(--sdl-lb-close-border, none);
+  border-radius: var(--sdl-lb-close-radius, 50%);
+  width: var(--sdl-lb-close-size, 44px);
+  height: var(--sdl-lb-close-size, 44px);
+}
+
+.pswp.sdl-lightbox .pswp__button--close svg {
+  width: calc(var(--sdl-lb-close-size, 44px) * 0.45);
+  height: calc(var(--sdl-lb-close-size, 44px) * 0.45);
+}
+
+/* ── zoom button ────────────────────────────────── */
+.pswp.sdl-lightbox .pswp__button--zoom svg {
+  width: var(--sdl-lb-toolbar-size, 22px);
+  height: var(--sdl-lb-toolbar-size, 22px);
+}
+
+/* ── navigation arrows ──────────────────────────── */
+.pswp.sdl-lightbox .pswp__button--arrow {
+  color: var(--sdl-lb-arrow-color, #fff);
+  background: var(--sdl-lb-arrow-bg, rgba(255,255,255,0.12));
+  border: var(--sdl-lb-arrow-border, none);
+  border-radius: var(--sdl-lb-arrow-radius, 50%);
+  width: var(--sdl-lb-arrow-size, 48px);
+  height: var(--sdl-lb-arrow-size, 48px);
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: 0;
+  opacity: 0.8;
+  transition: opacity 0.25s, background 0.25s, transform 0.15s;
+}
+
+.pswp.sdl-lightbox .pswp__button--arrow:hover {
+  opacity: 1;
+  background: var(--sdl-lb-arrow-bg, rgba(255,255,255,0.12));
+  filter: brightness(1.3);
+}
+
+.pswp.sdl-lightbox .pswp__button--arrow svg {
+  width: calc(var(--sdl-lb-arrow-size, 48px) * 0.45);
+  height: calc(var(--sdl-lb-arrow-size, 48px) * 0.45);
+}
+
+.pswp.sdl-lightbox .pswp__button--arrow--prev {
+  left: 16px;
+}
+
+.pswp.sdl-lightbox .pswp__button--arrow--next {
+  right: 16px;
+}
+
+/* hide arrows */
+.pswp.sdl-lightbox.sdl-lb-no-arrows .pswp__button--arrow {
+  display: none !important;
+}
+
+/* ── thumbnail strip wrapper ────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-thumbs-wrap {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.pswp.sdl-lightbox .sdl-lb-thumbs-wrap.sdl-lb-thumbs--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+
+/* ── thumbnail strip inner ──────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-thumbs {
+  display: flex;
+  gap: var(--sdl-lb-thumb-gap, 6px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+
+.pswp.sdl-lightbox .sdl-lb-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── individual thumbnail ───────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-thumb {
+  flex-shrink: 0;
+  width: var(--sdl-lb-thumb-height, 60px);
+  height: var(--sdl-lb-thumb-height, 60px);
+  border-radius: var(--sdl-lb-thumb-radius, 4px);
+  overflow: hidden;
+  cursor: pointer;
+  border: var(--sdl-lb-thumb-active-width, 2px) solid transparent;
+  transition: border-color 0.2s, opacity 0.2s, transform 0.15s;
+  opacity: 0.55;
+  background: rgba(255,255,255,0.08);
+  padding: 0;
+  outline: none;
+}
+
+.pswp.sdl-lightbox .sdl-lb-thumb:hover {
+  opacity: 0.85;
+}
+
+.pswp.sdl-lightbox .sdl-lb-thumb--active {
+  border-color: var(--sdl-lb-thumb-active-color, #fff);
+  opacity: 1;
+}
+
+.pswp.sdl-lightbox .sdl-lb-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── caption ────────────────────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: var(--sdl-lb-caption-color, #fff);
+  font-size: var(--sdl-lb-caption-size, 14px);
+  padding: 12px 24px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.4));
+  z-index: 50;
+  pointer-events: none;
+  line-height: 1.5;
+}
+
+/* when thumbnails present, caption sits above them */
+.pswp.sdl-lightbox .sdl-lb-thumbs-wrap ~ .sdl-lb-caption,
+.pswp.sdl-lightbox .sdl-lb-caption:has(~ .sdl-lb-thumbs-wrap) {
+  bottom: auto;
+  top: auto;
+}
+
+/* ── toast notification ─────────────────────────── */
+.pswp.sdl-lightbox .sdl-lb-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+.pswp.sdl-lightbox .sdl-lb-toast.sdl-lb-toast--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── lightbox icon overlay on gallery items ─────── */
+.sdl-lb-icon {
+  position: absolute;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sdl-lb-icon-bg, rgba(0,0,0,0.4));
+  border-radius: var(--sdl-lb-icon-radius, 6px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.sdl-lb-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--sdl-lb-icon-color, #fff);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+*:hover > .sdl-lb-icon {
+  opacity: 1;
+}
+
+/* icon positions */
+.sdl-lb-icon--top-right    { top: 10px; right: 10px; }
+.sdl-lb-icon--top-left     { top: 10px; left: 10px; }
+.sdl-lb-icon--bottom-right { bottom: 10px; right: 10px; }
+.sdl-lb-icon--bottom-left  { bottom: 10px; left: 10px; }
+.sdl-lb-icon--center       { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* ── responsive: mobile ─────────────────────────── */
+@media (max-width: 767px) {
+  .pswp.sdl-lightbox .pswp__top-bar {
+    padding: 8px 10px;
+    gap: 2px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button,
+  .pswp.sdl-lightbox .sdl-lb-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button svg,
+  .pswp.sdl-lightbox .sdl-lb-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .pswp.sdl-lightbox .pswp__counter {
+    font-size: 12px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button--arrow {
+    width: 36px;
+    height: 36px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button--arrow svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button--arrow--prev {
+    left: 6px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button--arrow--next {
+    right: 6px;
+  }
+
+  .pswp.sdl-lightbox .sdl-lb-thumbs-wrap {
+    padding: 6px 8px;
+  }
+
+  .pswp.sdl-lightbox .sdl-lb-thumb {
+    width: calc(var(--sdl-lb-thumb-height, 60px) * 0.75);
+    height: calc(var(--sdl-lb-thumb-height, 60px) * 0.75);
+  }
+
+  .pswp.sdl-lightbox .sdl-lb-caption {
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+
+  .sdl-lb-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .sdl-lb-icon svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* ── responsive: tablet ─────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pswp.sdl-lightbox .pswp__button--arrow--prev {
+    left: 10px;
+  }
+
+  .pswp.sdl-lightbox .pswp__button--arrow--next {
+    right: 10px;
+  }
+
+  .pswp.sdl-lightbox .sdl-lb-thumb {
+    width: calc(var(--sdl-lb-thumb-height, 60px) * 0.85);
+    height: calc(var(--sdl-lb-thumb-height, 60px) * 0.85);
+  }
+}
+
+/* ── image in lightbox ──────────────────────────── */
+.pswp.sdl-lightbox .pswp__img {
+  object-fit: contain;
+}
+
+/* ── slide zoom cursor ──────────────────────────── */
+.pswp.sdl-lightbox .pswp__img--placeholder {
+  opacity: 0.5;
+}
+
+/* ── prevent body scroll when lightbox open ─────── */
+.pswp--open ~ body,
+body:has(.pswp--open) {
+  overflow: hidden !important;
+}
