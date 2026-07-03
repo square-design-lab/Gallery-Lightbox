@@ -55,7 +55,7 @@
 
     bgColor: 'rgba(0,0,0,0.92)',
 
-    transition: 'zoom',
+    transition: 'fade',
 
     showLightboxIcon: true,
     lightboxIconPosition: 'top-right',
@@ -323,12 +323,11 @@
             msrc: img.thumbSrc || img.src,
             width: img.width,
             height: img.height,
-            alt: img.alt || '',
-            element: img.imgEl || img.element
+            alt: img.alt || ''
           };
         }),
-        showHideAnimationType: cfg.transition === 'none' ? 'none' : cfg.transition === 'fade' ? 'fade' : 'zoom',
-        showAnimationDuration: 330,
+        showHideAnimationType: cfg.transition === 'none' ? 'none' : 'fade',
+        showAnimationDuration: 300,
         hideAnimationDuration: 250,
         bgOpacity: 1,
         maxZoomLevel: cfg.maxZoomLevel || 3,

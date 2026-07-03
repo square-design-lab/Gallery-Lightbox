@@ -586,7 +586,6 @@
                 <div class="group-header" onclick="toggleGroup(this)">Animation</div>
                 <div class="group-body">
                     <div class="control-row"><label>Opening transition</label><select id="transition" onchange="update()">
-                        <option value="zoom">Zoom</option>
                         <option value="fade">Fade</option>
                         <option value="none">None</option>
                     </select></div>
@@ -1063,7 +1062,7 @@
         var bgRgba = hexToRgba(val('bgColorPicker'), num('bgOpacity'));
         if (bgRgba !== 'rgba(0,0,0,0.92)') config.bgColor = bgRgba;
 
-        if (val('transition') !== 'zoom') config.transition = val('transition');
+        if (val('transition') !== 'fade') config.transition = val('transition');
 
         if (!checked('showLightboxIcon')) config.showLightboxIcon = false;
         if (val('lightboxIconPosition') !== 'top-right') config.lightboxIconPosition = val('lightboxIconPosition');
@@ -1147,7 +1146,7 @@
         if (num('closeSize') !== 44) config.closeSize = num('closeSize');
         var bgRgba = hexToRgba(val('bgColorPicker'), num('bgOpacity'));
         if (bgRgba !== 'rgba(0,0,0,0.92)') config.bgColor = bgRgba;
-        if (val('transition') !== 'zoom') config.transition = val('transition');
+        if (val('transition') !== 'fade') config.transition = val('transition');
         if (!checked('showLightboxIcon')) config.showLightboxIcon = false;
         if (val('lightboxIconPosition') !== 'top-right') config.lightboxIconPosition = val('lightboxIconPosition');
         if (val('lightboxIconColor') !== '#ffffff') config.lightboxIconColor = val('lightboxIconColor');
