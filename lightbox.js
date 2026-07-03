@@ -313,10 +313,10 @@
       var thumbsVisible = cfg.thumbnails;
       var thumbHeight = cfg.thumbnailHeight;
       var captionBelow = cfg.showCaption && cfg.captionPosition === 'below';
-      var captionBelowH = captionBelow ? 36 : 0;
+      var captionBelowH = captionBelow ? 40 : 0;
+      var thumbStripH = thumbHeight + 24;
 
-      var lightbox = new _PSLightbox({
-        pswpModule: _PhotoSwipe,
+      var pswp = new _PhotoSwipe({
         dataSource: images.map(function (img) {
           return {
             src: img.fullSrc || img.src,
@@ -345,11 +345,12 @@
 
         paddingFn: function (viewportSize) {
           var mobile = viewportSize.x < 768;
-          var bottomPad = mobile ? 10 : 10;
+          var bottomPad = 10;
+          var mobileThumbH = thumbHeight * 0.75 + 16;
           if (captionBelow && thumbsVisible) {
-            bottomPad = (mobile ? thumbHeight * 0.75 + 8 : thumbHeight + 16) + captionBelowH + 8;
+            bottomPad = (mobile ? mobileThumbH : thumbStripH) + captionBelowH;
           } else if (thumbsVisible) {
-            bottomPad = mobile ? thumbHeight * 0.75 + 16 : thumbHeight + 24;
+            bottomPad = mobile ? mobileThumbH : thumbStripH;
           } else if (captionBelow) {
             bottomPad = captionBelowH + 12;
           }
@@ -362,10 +363,10 @@
         }
       });
 
+      _activePswp = pswp;
+
       /* ── custom UI ──────────────────────────── */
-      lightbox.on('uiRegister', function () {
-        var pswp = lightbox.pswp;
-        _activePswp = pswp;
+      pswp.on('uiRegister', function () {
         pswp.element.classList.add('sdl-lightbox');
         applyStyles(pswp.element, cfg);
 
@@ -471,13 +472,18 @@
             isButton: false,
             appendTo: 'wrapper',
             className: 'sdl-lb-caption sdl-lb-caption--' + capPos,
-            onInit: function (el, p) {
+            onInit: function (el) {
               function updateCap() {
-                var cap = images[p.currIndex] ? images[p.currIndex].caption : '';
+                var cap = images[pswp.currIndex] ? images[pswp.currIndex].caption : '';
                 el.textContent = cap;
                 el.style.display = cap ? '' : 'none';
+                if (capPos === 'below' && thumbsVisible) {
+                  el.style.bottom = thumbStripH + 'px';
+                } else if (capPos === 'below') {
+                  el.style.bottom = '0';
+                }
               }
-              p.on('change', updateCap);
+              pswp.on('change', updateCap);
               updateCap();
             }
           });
@@ -487,9 +493,9 @@
         if (cfg.thumbnails) {
           pswp.ui.registerElement({
             name: 'sdl-thumbnails',
-            className: 'sdl-lb-thumbs-wrap' + (captionBelow ? ' sdl-lb-thumbs-wrap--with-caption' : ''),
+            className: 'sdl-lb-thumbs-wrap',
             appendTo: 'wrapper',
-            onInit: function (wrapEl, p) {
+            onInit: function (wrapEl) {
               var inner = document.createElement('div');
               inner.className = 'sdl-lb-thumbs';
               var thumbEls = [];
@@ -509,7 +515,7 @@
 
                 t.addEventListener('click', function (e) {
                   e.stopPropagation();
-                  p.goTo(idx);
+                  pswp.goTo(idx);
                 });
 
                 inner.appendChild(t);
@@ -520,16 +526,16 @@
 
               function updateActive() {
                 thumbEls.forEach(function (t, i) {
-                  t.classList.toggle('sdl-lb-thumb--active', i === p.currIndex);
+                  t.classList.toggle('sdl-lb-thumb--active', i === pswp.currIndex);
                 });
-                var active = thumbEls[p.currIndex];
+                var active = thumbEls[pswp.currIndex];
                 if (active && inner.scrollTo) {
                   var scrollTarget = active.offsetLeft - (inner.clientWidth / 2) + (active.offsetWidth / 2);
                   inner.scrollTo({ left: scrollTarget, behavior: 'smooth' });
                 }
               }
 
-              p.on('change', updateActive);
+              pswp.on('change', updateActive);
 
               /* drag-scroll thumbnail strip */
               var sx = 0, sl = 0, dragging = false;
@@ -558,12 +564,8 @@
         }
       });
 
-      /* keyboard navigation */
-      lightbox.on('afterInit', function () {
-        var pswp = lightbox.pswp;
-        if (!pswp) return;
-
-        /* trackpad pinch-to-zoom */
+      /* trackpad pinch-to-zoom */
+      pswp.on('afterInit', function () {
         pswp.element.addEventListener('wheel', function (e) {
           if (!e.ctrlKey) return;
           e.preventDefault();
@@ -579,11 +581,11 @@
       });
 
       /* cleanup */
-      lightbox.on('destroy', function () {
-        if (_activePswp === lightbox.pswp) _activePswp = null;
+      pswp.on('destroy', function () {
+        if (_activePswp === pswp) _activePswp = null;
       });
 
-      lightbox.loadAndOpen(startIndex);
+      pswp.init();
     }).catch(function (err) {
       console.error('[' + PLUGIN + '] Failed to load PhotoSwipe:', err);
     });

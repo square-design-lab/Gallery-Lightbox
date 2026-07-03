@@ -273,12 +273,8 @@
 /* below image (not overlaid) — sits above thumbnails */
 .pswp.sdl-lightbox .sdl-lb-caption--below {
   top: auto;
+  bottom: 0;
   z-index: 65;
-}
-
-/* when thumbs + below caption: caption sits just above thumbs */
-.pswp.sdl-lightbox .sdl-lb-thumbs-wrap--with-caption {
-  z-index: 60;
 }
 
 /* ── toast notification ─────────────────────────── */
