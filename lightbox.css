@@ -52,7 +52,7 @@
   opacity: 1;
 }
 
-.pswp.sdl-lightbox .pswp__button:active {
+.pswp.sdl-lightbox .pswp__button:active:not(.pswp__button--arrow) {
   transform: scale(0.92);
 }
 

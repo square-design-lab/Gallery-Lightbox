@@ -431,6 +431,36 @@
           });
         }
 
+        /* caption — registered before thumbs toggle so updateCaptionPos is available */
+        var capPos = cfg.showCaption ? (cfg.captionPosition || 'overlaid-bottom') : '';
+        var captionEl = null;
+
+        function updateCaptionPos() {
+          if (!captionEl || capPos !== 'below') return;
+          captionEl.style.bottom = thumbsVisible ? (thumbStripH + 'px') : '0';
+        }
+
+        if (cfg.showCaption) {
+          pswp.ui.registerElement({
+            name: 'sdl-caption',
+            order: 100,
+            isButton: false,
+            appendTo: 'wrapper',
+            className: 'sdl-lb-caption sdl-lb-caption--' + capPos,
+            onInit: function (el) {
+              captionEl = el;
+              function updateCap() {
+                var cap = images[pswp.currIndex] ? images[pswp.currIndex].caption : '';
+                el.textContent = cap;
+                el.style.display = cap ? '' : 'none';
+                updateCaptionPos();
+              }
+              pswp.on('change', updateCap);
+              updateCap();
+            }
+          });
+        }
+
         /* thumbnails toggle */
         if (cfg.thumbnails) {
           pswp.ui.registerElement({
@@ -445,6 +475,7 @@
               thumbsVisible = !thumbsVisible;
               var wrap = pswp.element.querySelector('.sdl-lb-thumbs-wrap');
               if (wrap) wrap.classList.toggle('sdl-lb-thumbs--hidden', !thumbsVisible);
+              updateCaptionPos();
               pswp.updateSize(true);
             }
           });
@@ -458,32 +489,6 @@
             appendTo: 'wrapper',
             onInit: function (el) {
               el.style.background = cfg.overlayColor;
-            }
-          });
-        }
-
-        /* caption */
-        if (cfg.showCaption) {
-          var capPos = cfg.captionPosition || 'overlaid-bottom';
-          pswp.ui.registerElement({
-            name: 'sdl-caption',
-            order: 100,
-            isButton: false,
-            appendTo: 'wrapper',
-            className: 'sdl-lb-caption sdl-lb-caption--' + capPos,
-            onInit: function (el) {
-              function updateCap() {
-                var cap = images[pswp.currIndex] ? images[pswp.currIndex].caption : '';
-                el.textContent = cap;
-                el.style.display = cap ? '' : 'none';
-                if (capPos === 'below' && thumbsVisible) {
-                  el.style.bottom = thumbStripH + 'px';
-                } else if (capPos === 'below') {
-                  el.style.bottom = '0';
-                }
-              }
-              pswp.on('change', updateCap);
-              updateCap();
             }
           });
         }
