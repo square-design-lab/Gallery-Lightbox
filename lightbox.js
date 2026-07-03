@@ -64,8 +64,12 @@
     lightboxIconBorderRadius: '6px',
 
     showCaption: false,
+    captionPosition: 'overlaid-bottom',
     captionColor: '#ffffff',
     captionFontSize: 14,
+
+    showOverlay: false,
+    overlayColor: 'rgba(0,0,0,0.3)',
 
     maxZoomLevel: 3,
 
@@ -163,11 +167,6 @@
       if (h && h.indexOf('itemId') === -1 && h !== '#') return h;
     }
     return '';
-  }
-
-  function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
   }
 
   /* ── PhotoSwipe loader ────────────────────────── */
@@ -313,9 +312,21 @@
     loadPS().then(function () {
       var thumbsVisible = cfg.thumbnails;
       var thumbHeight = cfg.thumbnailHeight;
+      var captionBelow = cfg.showCaption && cfg.captionPosition === 'below';
+      var captionBelowH = captionBelow ? 36 : 0;
 
       var lightbox = new _PSLightbox({
         pswpModule: _PhotoSwipe,
+        dataSource: images.map(function (img) {
+          return {
+            src: img.fullSrc || img.src,
+            msrc: img.thumbSrc || img.src,
+            width: img.width,
+            height: img.height,
+            alt: img.alt || '',
+            element: img.imgEl || img.element
+          };
+        }),
         showHideAnimationType: cfg.transition === 'none' ? 'none' : cfg.transition === 'fade' ? 'fade' : 'zoom',
         showAnimationDuration: 330,
         hideAnimationDuration: 250,
@@ -330,29 +341,25 @@
         closeSVG: cfg.customCloseIcon || ICONS.close,
         zoom: cfg.showZoom,
         counter: cfg.showCounter,
+        index: startIndex,
 
         paddingFn: function (viewportSize) {
           var mobile = viewportSize.x < 768;
+          var bottomPad = mobile ? 10 : 10;
+          if (captionBelow && thumbsVisible) {
+            bottomPad = (mobile ? thumbHeight * 0.75 + 8 : thumbHeight + 16) + captionBelowH + 8;
+          } else if (thumbsVisible) {
+            bottomPad = mobile ? thumbHeight * 0.75 + 16 : thumbHeight + 24;
+          } else if (captionBelow) {
+            bottomPad = captionBelowH + 12;
+          }
           return {
             top: mobile ? 50 : 10,
-            bottom: thumbsVisible ? (mobile ? thumbHeight + 16 : thumbHeight + 24) : (mobile ? 10 : 10),
+            bottom: bottomPad,
             left: mobile ? 0 : 10,
             right: mobile ? 0 : 10
           };
         }
-      });
-
-      lightbox.addFilter('numItems', function () { return images.length; });
-      lightbox.addFilter('itemData', function (_itemData, index) {
-        var img = images[index];
-        return {
-          src: img.fullSrc || img.src,
-          msrc: img.thumbSrc || img.src,
-          width: img.width,
-          height: img.height,
-          alt: img.alt || '',
-          element: img.imgEl || img.element
-        };
       });
 
       /* ── custom UI ──────────────────────────── */
@@ -443,23 +450,35 @@
           });
         }
 
+        /* image overlay */
+        if (cfg.showOverlay) {
+          pswp.ui.registerElement({
+            name: 'sdl-overlay',
+            className: 'sdl-lb-image-overlay',
+            appendTo: 'wrapper',
+            onInit: function (el) {
+              el.style.background = cfg.overlayColor;
+            }
+          });
+        }
+
         /* caption */
         if (cfg.showCaption) {
+          var capPos = cfg.captionPosition || 'overlaid-bottom';
           pswp.ui.registerElement({
             name: 'sdl-caption',
             order: 100,
             isButton: false,
             appendTo: 'wrapper',
-            className: 'sdl-lb-caption',
+            className: 'sdl-lb-caption sdl-lb-caption--' + capPos,
             onInit: function (el, p) {
-              p.on('change', function () {
+              function updateCap() {
                 var cap = images[p.currIndex] ? images[p.currIndex].caption : '';
                 el.textContent = cap;
                 el.style.display = cap ? '' : 'none';
-              });
-              var cap = images[p.currIndex] ? images[p.currIndex].caption : '';
-              el.textContent = cap;
-              el.style.display = cap ? '' : 'none';
+              }
+              p.on('change', updateCap);
+              updateCap();
             }
           });
         }
@@ -468,7 +487,7 @@
         if (cfg.thumbnails) {
           pswp.ui.registerElement({
             name: 'sdl-thumbnails',
-            className: 'sdl-lb-thumbs-wrap',
+            className: 'sdl-lb-thumbs-wrap' + (captionBelow ? ' sdl-lb-thumbs-wrap--with-caption' : ''),
             appendTo: 'wrapper',
             onInit: function (wrapEl, p) {
               var inner = document.createElement('div');
@@ -504,14 +523,15 @@
                   t.classList.toggle('sdl-lb-thumb--active', i === p.currIndex);
                 });
                 var active = thumbEls[p.currIndex];
-                if (active) {
-                  active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                if (active && inner.scrollTo) {
+                  var scrollTarget = active.offsetLeft - (inner.clientWidth / 2) + (active.offsetWidth / 2);
+                  inner.scrollTo({ left: scrollTarget, behavior: 'smooth' });
                 }
               }
 
               p.on('change', updateActive);
 
-              /* touch-scroll thumbnail strip */
+              /* drag-scroll thumbnail strip */
               var sx = 0, sl = 0, dragging = false;
               inner.addEventListener('pointerdown', function (e) {
                 if (e.target.closest('.sdl-lb-thumb')) return;
@@ -526,16 +546,24 @@
               });
               inner.addEventListener('pointerup', function () { dragging = false; });
               inner.addEventListener('pointercancel', function () { dragging = false; });
+
+              /* mouse wheel scroll on thumbnail strip */
+              inner.addEventListener('wheel', function (e) {
+                if (e.ctrlKey) return;
+                e.preventDefault();
+                inner.scrollLeft += e.deltaY || e.deltaX;
+              }, { passive: false });
             }
           });
         }
       });
 
-      /* trackpad pinch-to-zoom */
+      /* keyboard navigation */
       lightbox.on('afterInit', function () {
         var pswp = lightbox.pswp;
         if (!pswp) return;
 
+        /* trackpad pinch-to-zoom */
         pswp.element.addEventListener('wheel', function (e) {
           if (!e.ctrlKey) return;
           e.preventDefault();
@@ -546,7 +574,7 @@
           var max = slide.zoomLevels.max || (cfg.maxZoomLevel || 3);
           var factor = 1 - e.deltaY * 0.01;
           var next = Math.max(min, Math.min(max, curr * factor));
-          slide.zoomTo(next, { x: e.clientX, y: e.clientY }, e.deltaY > 0 ? 100 : 100);
+          slide.zoomTo(next, { x: e.clientX, y: e.clientY }, 100);
         }, { passive: false });
       });
 
@@ -590,14 +618,9 @@
     var clickHandlers = [];
     images.forEach(function (img, idx) {
       var handler = function (e) {
-        var target = e.target;
-        if (target.closest('a[href*="itemId"]')) {
-          e.preventDefault();
-          e.stopPropagation();
-        } else {
-          e.preventDefault();
-        }
+        e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         openLightbox(images, idx, cfg);
       };
       img.element.addEventListener('click', handler, true);
