@@ -197,6 +197,9 @@
   max-width: 100%;
   padding: 4px 2px;
   scrollbar-width: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .pswp.sdl-lightbox .sdl-lb-thumbs::-webkit-scrollbar {

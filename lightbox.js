@@ -331,7 +331,7 @@
         hideAnimationDuration: 250,
         bgOpacity: 1,
         maxZoomLevel: cfg.maxZoomLevel || 3,
-        closeOnVerticalDrag: true,
+        closeOnVerticalDrag: false,
         pinchToClose: true,
         loop: true,
         preload: [1, 2],
@@ -542,25 +542,46 @@
               pswp.on('change', updateActive);
 
               /* drag-scroll thumbnail strip */
-              var sx = 0, sl = 0, dragging = false;
+              var sx = 0, sl = 0, dragging = false, dragMoved = false;
               inner.addEventListener('pointerdown', function (e) {
-                if (e.target.closest('.sdl-lb-thumb')) return;
                 dragging = true;
+                dragMoved = false;
                 sx = e.clientX;
                 sl = inner.scrollLeft;
                 inner.setPointerCapture(e.pointerId);
+                inner.style.cursor = 'grabbing';
               });
               inner.addEventListener('pointermove', function (e) {
                 if (!dragging) return;
-                inner.scrollLeft = sl - (e.clientX - sx);
+                var dx = e.clientX - sx;
+                if (Math.abs(dx) > 3) dragMoved = true;
+                inner.scrollLeft = sl - dx;
               });
-              inner.addEventListener('pointerup', function () { dragging = false; });
-              inner.addEventListener('pointercancel', function () { dragging = false; });
+              inner.addEventListener('pointerup', function (e) {
+                dragging = false;
+                inner.style.cursor = '';
+                if (dragMoved) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              });
+              inner.addEventListener('pointercancel', function () {
+                dragging = false;
+                inner.style.cursor = '';
+              });
+              inner.addEventListener('click', function (e) {
+                if (dragMoved) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  dragMoved = false;
+                }
+              }, true);
 
-              /* mouse wheel scroll on thumbnail strip */
+              /* mouse wheel / trackpad scroll on thumbnail strip */
               inner.addEventListener('wheel', function (e) {
                 if (e.ctrlKey) return;
                 e.preventDefault();
+                e.stopPropagation();
                 inner.scrollLeft += e.deltaY || e.deltaX;
               }, { passive: false });
             }
@@ -568,19 +589,49 @@
         }
       });
 
-      /* trackpad pinch-to-zoom */
+      /* trackpad gestures */
       pswp.on('afterInit', function () {
+        var swipeAccum = 0;
+        var swipeTimeout = null;
+        var swipeThreshold = 50;
+
         pswp.element.addEventListener('wheel', function (e) {
-          if (!e.ctrlKey) return;
+          /* pinch-to-zoom (ctrl+wheel) */
+          if (e.ctrlKey) {
+            e.preventDefault();
+            var slide = pswp.currSlide;
+            if (!slide) return;
+            var curr = slide.currZoomLevel;
+            var min = slide.zoomLevels.min;
+            var max = slide.zoomLevels.max || (cfg.maxZoomLevel || 3);
+            var factor = 1 - e.deltaY * 0.01;
+            var next = Math.max(min, Math.min(max, curr * factor));
+            slide.zoomTo(next, { x: e.clientX, y: e.clientY }, 100);
+            return;
+          }
+
+          /* skip if over thumbnail strip */
+          if (e.target.closest('.sdl-lb-thumbs-wrap')) return;
+
+          /* trackpad horizontal swipe to navigate */
+          var dx = e.deltaX;
+          var dy = e.deltaY;
+          if (Math.abs(dx) < Math.abs(dy)) return;
+          if (Math.abs(dx) < 2) return;
+
           e.preventDefault();
-          var slide = pswp.currSlide;
-          if (!slide) return;
-          var curr = slide.currZoomLevel;
-          var min = slide.zoomLevels.min;
-          var max = slide.zoomLevels.max || (cfg.maxZoomLevel || 3);
-          var factor = 1 - e.deltaY * 0.01;
-          var next = Math.max(min, Math.min(max, curr * factor));
-          slide.zoomTo(next, { x: e.clientX, y: e.clientY }, 100);
+          swipeAccum += dx;
+
+          clearTimeout(swipeTimeout);
+          swipeTimeout = setTimeout(function () { swipeAccum = 0; }, 300);
+
+          if (swipeAccum > swipeThreshold) {
+            swipeAccum = 0;
+            pswp.next();
+          } else if (swipeAccum < -swipeThreshold) {
+            swipeAccum = 0;
+            pswp.prev();
+          }
         }, { passive: false });
       });
 
