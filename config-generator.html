@@ -425,6 +425,7 @@
         .mock-lb-image {
             max-width: 100%; max-height: 100%;
             display: flex; align-items: center; justify-content: center;
+            position: relative;
         }
 
         .mock-lb-image img {
@@ -621,10 +622,28 @@
             <div class="group" data-group="caption">
                 <div class="group-header" onclick="toggleGroup(this)">Caption</div>
                 <div class="group-body">
+                    <div class="control-row"><label>Caption position</label><select id="captionPosition" onchange="update()">
+                        <option value="overlaid-bottom" selected>Overlaid Bottom</option>
+                        <option value="overlaid-center">Overlaid Center</option>
+                        <option value="overlaid-top">Overlaid Top</option>
+                        <option value="below">Below Image</option>
+                    </select></div>
                     <div class="color-row">
                         <div class="color-chip"><span class="color-label">Caption color</span><input type="color" id="captionColor" value="#ffffff" onchange="update()"></div>
                     </div>
                     <div class="control-row" style="margin-top:10px"><label>Caption font size (px)</label><input type="number" id="captionFontSize" value="14" min="10" max="24" onchange="update()"></div>
+                </div>
+            </div>
+
+            <!-- IMAGE OVERLAY -->
+            <div class="group" data-group="overlay">
+                <div class="group-header" onclick="toggleGroup(this)">Image Overlay</div>
+                <div class="group-body">
+                    <div class="toggle-row"><label>Show overlay on image</label><input type="checkbox" id="showOverlay" onchange="update()"></div>
+                    <div class="color-row">
+                        <div class="color-chip"><span class="color-label">Overlay color</span><input type="color" id="overlayColor" value="#000000" onchange="update()"></div>
+                    </div>
+                    <div class="control-row" style="margin-top:10px"><label>Overlay opacity</label><input type="number" id="overlayOpacity" value="30" min="0" max="100" onchange="update()"><p class="helper-text">0 = transparent, 100 = solid</p></div>
                 </div>
             </div>
 
@@ -681,7 +700,7 @@
         </div>
         <div class="mock-lb-content" id="mockLbContent">
             <button class="mock-lb-arrow mock-lb-prev" id="mockPrev" onclick="mockNav(-1)"></button>
-            <div class="mock-lb-image"><img id="mockLbImg" src="" alt=""></div>
+            <div class="mock-lb-image"><img id="mockLbImg" src="" alt=""><div class="mock-lb-overlay" id="mockOverlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;border-radius:4px;"></div></div>
             <button class="mock-lb-arrow mock-lb-next" id="mockNext" onclick="mockNav(1)"></button>
         </div>
         <div class="mock-lb-caption" id="mockCaption" style="display:none">Sample image caption</div>
@@ -962,16 +981,33 @@
 
         caption.style.color = val('captionColor');
         caption.style.fontSize = num('captionFontSize') + 'px';
+        caption.style.background = 'none';
         if (checked('showCaption')) {
             caption.style.display = '';
             caption.textContent = CAPTIONS[currentMockIndex];
-            if (checked('thumbnails')) {
-                caption.style.bottom = (num('thumbnailHeight') + 30) + 'px';
-            } else {
-                caption.style.bottom = '0';
+            var capPos = val('captionPosition');
+            caption.style.top = ''; caption.style.bottom = ''; caption.style.transform = '';
+            if (capPos === 'overlaid-top') {
+                caption.style.top = '60px'; caption.style.bottom = 'auto';
+            } else if (capPos === 'overlaid-center') {
+                caption.style.top = '50%'; caption.style.bottom = 'auto'; caption.style.transform = 'translateY(-50%)';
+            } else if (capPos === 'overlaid-bottom') {
+                var obottom = checked('thumbnails') ? (num('thumbnailHeight') + 30) + 'px' : '0';
+                caption.style.bottom = obottom; caption.style.top = 'auto';
+            } else if (capPos === 'below') {
+                var thumbH = checked('thumbnails') ? (num('thumbnailHeight') + 30) : 0;
+                caption.style.bottom = thumbH + 'px'; caption.style.top = 'auto';
             }
         } else {
             caption.style.display = 'none';
+        }
+
+        var overlay = document.getElementById('mockOverlay');
+        if (checked('showOverlay')) {
+            overlay.style.display = '';
+            overlay.style.background = hexToRgba(val('overlayColor'), num('overlayOpacity'));
+        } else {
+            overlay.style.display = 'none';
         }
     }
 
@@ -1036,8 +1072,15 @@
         if (iconBgRgba !== 'rgba(0,0,0,0.4)') config.lightboxIconBg = iconBgRgba;
         if (val('lightboxIconBorderRadius') !== '6px') config.lightboxIconBorderRadius = val('lightboxIconBorderRadius');
 
+        if (val('captionPosition') !== 'overlaid-bottom') config.captionPosition = val('captionPosition');
         if (val('captionColor') !== '#ffffff') config.captionColor = val('captionColor');
         if (num('captionFontSize') !== 14) config.captionFontSize = num('captionFontSize');
+
+        if (checked('showOverlay')) {
+            config.showOverlay = true;
+            var ovRgba = hexToRgba(val('overlayColor'), num('overlayOpacity'));
+            if (ovRgba !== 'rgba(0,0,0,0.3)') config.overlayColor = ovRgba;
+        }
 
         if (val('toolbarIconColor') !== '#ffffff') config.toolbarIconColor = val('toolbarIconColor');
         if (num('toolbarIconSize') !== 22) config.toolbarIconSize = num('toolbarIconSize');
@@ -1047,7 +1090,7 @@
 
         var hasConfig = Object.keys(config).length > 0;
 
-        var cdnBase = 'https://cdn.jsdelivr.net/gh/square-design-lab/Gallery-Lightbox@1.0';
+        var cdnBase = 'https://gallery-lightbox.pages.dev';
 
         var lines = [];
         lines.push('<span class="hl-tag">&lt;!-- SDL Gallery Lightbox v1.0 --&gt;</span>');
@@ -1111,8 +1154,14 @@
         var iconBgRgba = hexToRgba(val('lightboxIconBgColor'), num('lightboxIconBgOpacity'));
         if (iconBgRgba !== 'rgba(0,0,0,0.4)') config.lightboxIconBg = iconBgRgba;
         if (val('lightboxIconBorderRadius') !== '6px') config.lightboxIconBorderRadius = val('lightboxIconBorderRadius');
+        if (val('captionPosition') !== 'overlaid-bottom') config.captionPosition = val('captionPosition');
         if (val('captionColor') !== '#ffffff') config.captionColor = val('captionColor');
         if (num('captionFontSize') !== 14) config.captionFontSize = num('captionFontSize');
+        if (checked('showOverlay')) {
+            config.showOverlay = true;
+            var ovRgba2 = hexToRgba(val('overlayColor'), num('overlayOpacity'));
+            if (ovRgba2 !== 'rgba(0,0,0,0.3)') config.overlayColor = ovRgba2;
+        }
         if (val('toolbarIconColor') !== '#ffffff') config.toolbarIconColor = val('toolbarIconColor');
         if (num('toolbarIconSize') !== 22) config.toolbarIconSize = num('toolbarIconSize');
         if (val('counterColor') !== '#ffffff') config.counterColor = val('counterColor');
@@ -1120,7 +1169,7 @@
         if (num('maxZoomLevel') !== 3) config.maxZoomLevel = num('maxZoomLevel');
 
         var hasConfig = Object.keys(config).length > 0;
-        var cdnBase = 'https://cdn.jsdelivr.net/gh/square-design-lab/Gallery-Lightbox@1.0';
+        var cdnBase = 'https://gallery-lightbox.pages.dev';
         var out = [];
         out.push('<!-- SDL Gallery Lightbox v1.0 -->');
         if (hasConfig) {
