@@ -31,11 +31,11 @@
     thumbnailActiveBorderColor: '#ffffff',
     thumbnailActiveBorderWidth: 2,
 
-    showZoom: true,
-    showDownload: true,
-    showCounter: true,
+    showZoom: false,
+    showDownload: false,
+    showCounter: false,
     showFullscreen: false,
-    showShare: true,
+    showShare: false,
 
     showArrows: true,
     arrowColor: '#ffffff',
@@ -72,6 +72,11 @@
     overlayColor: 'rgba(0,0,0,0.3)',
 
     maxZoomLevel: 3,
+
+    imageBorder: false,
+    imageBorderWidth: 1,
+    imageBorderColor: '#ffffff',
+    imageBorderRadius: 4,
 
     counterColor: '#ffffff',
     counterFontSize: 14,
@@ -288,6 +293,10 @@
     s.setProperty('--sdl-lb-toolbar-size', cfg.toolbarIconSize + 'px');
     s.setProperty('--sdl-lb-caption-color', cfg.captionColor);
     s.setProperty('--sdl-lb-caption-size', cfg.captionFontSize + 'px');
+    if (cfg.imageBorder) {
+      s.setProperty('--sdl-lb-img-border', cfg.imageBorderWidth + 'px solid ' + cfg.imageBorderColor);
+      s.setProperty('--sdl-lb-img-radius', cfg.imageBorderRadius + 'px');
+    }
   }
 
   /* ── download handler ─────────────────────────── */
@@ -542,30 +551,36 @@
               pswp.on('change', updateActive);
 
               /* drag-scroll thumbnail strip */
-              var sx = 0, sl = 0, dragging = false, dragMoved = false;
+              var sx = 0, sl = 0, pending = false, dragging = false, dragMoved = false, pid = 0;
               inner.addEventListener('pointerdown', function (e) {
-                dragging = true;
+                pending = true;
+                dragging = false;
                 dragMoved = false;
                 sx = e.clientX;
                 sl = inner.scrollLeft;
-                inner.setPointerCapture(e.pointerId);
-                inner.style.cursor = 'grabbing';
+                pid = e.pointerId;
               });
               inner.addEventListener('pointermove', function (e) {
-                if (!dragging) return;
+                if (!pending && !dragging) return;
                 var dx = e.clientX - sx;
-                if (Math.abs(dx) > 3) dragMoved = true;
-                inner.scrollLeft = sl - dx;
-              });
-              inner.addEventListener('pointerup', function (e) {
-                dragging = false;
-                inner.style.cursor = '';
-                if (dragMoved) {
-                  e.preventDefault();
-                  e.stopPropagation();
+                if (pending && Math.abs(dx) > 4) {
+                  dragging = true;
+                  pending = false;
+                  inner.setPointerCapture(pid);
+                  inner.style.cursor = 'grabbing';
+                }
+                if (dragging) {
+                  dragMoved = true;
+                  inner.scrollLeft = sl - dx;
                 }
               });
+              inner.addEventListener('pointerup', function () {
+                pending = false;
+                dragging = false;
+                inner.style.cursor = '';
+              });
               inner.addEventListener('pointercancel', function () {
+                pending = false;
                 dragging = false;
                 inner.style.cursor = '';
               });
@@ -593,7 +608,9 @@
       pswp.on('afterInit', function () {
         var swipeAccum = 0;
         var swipeTimeout = null;
+        var swipeLocked = false;
         var swipeThreshold = 50;
+        var swipeCooldown = 400;
 
         pswp.element.addEventListener('wheel', function (e) {
           /* pinch-to-zoom (ctrl+wheel) */
@@ -620,17 +637,24 @@
           if (Math.abs(dx) < 2) return;
 
           e.preventDefault();
+
+          if (swipeLocked) return;
+
           swipeAccum += dx;
 
           clearTimeout(swipeTimeout);
-          swipeTimeout = setTimeout(function () { swipeAccum = 0; }, 300);
+          swipeTimeout = setTimeout(function () { swipeAccum = 0; }, 200);
 
           if (swipeAccum > swipeThreshold) {
             swipeAccum = 0;
+            swipeLocked = true;
             pswp.next();
+            setTimeout(function () { swipeLocked = false; }, swipeCooldown);
           } else if (swipeAccum < -swipeThreshold) {
             swipeAccum = 0;
+            swipeLocked = true;
             pswp.prev();
+            setTimeout(function () { swipeLocked = false; }, swipeCooldown);
           }
         }, { passive: false });
       });

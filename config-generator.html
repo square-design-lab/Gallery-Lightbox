@@ -514,10 +514,10 @@
             <div class="group open" data-group="toolbar">
                 <div class="group-header" onclick="toggleGroup(this)">Toolbar</div>
                 <div class="group-body">
-                    <div class="toggle-row"><label>Show zoom</label><input type="checkbox" id="showZoom" checked onchange="update()"></div>
-                    <div class="toggle-row"><label>Show download</label><input type="checkbox" id="showDownload" checked onchange="update()"></div>
-                    <div class="toggle-row"><label>Show counter</label><input type="checkbox" id="showCounter" checked onchange="update()"></div>
-                    <div class="toggle-row"><label>Show share</label><input type="checkbox" id="showShare" checked onchange="update()"></div>
+                    <div class="toggle-row"><label>Show zoom</label><input type="checkbox" id="showZoom" onchange="update()"></div>
+                    <div class="toggle-row"><label>Show download</label><input type="checkbox" id="showDownload" onchange="update()"></div>
+                    <div class="toggle-row"><label>Show counter</label><input type="checkbox" id="showCounter" onchange="update()"></div>
+                    <div class="toggle-row"><label>Show share</label><input type="checkbox" id="showShare" onchange="update()"></div>
                     <div class="toggle-row"><label>Show fullscreen</label><input type="checkbox" id="showFullscreen" onchange="update()"></div>
                     <div class="toggle-row"><label>Show caption</label><input type="checkbox" id="showCaption" onchange="update()"></div>
                     <div class="color-row" style="margin-top:8px">
@@ -547,7 +547,14 @@
                         <option value="8px">Rounded</option>
                         <option value="0px">Square</option>
                     </select></div>
-                    <div class="control-row"><label>Arrow border</label><input type="text" id="arrowBorder" value="none" onchange="update()"><p class="helper-text">e.g. "1px solid #fff" or "none"</p></div>
+                    <div class="toggle-row"><label>Show arrow border</label><input type="checkbox" id="arrowBorderToggle" onchange="update()"></div>
+                    <div id="arrowBorderOptions" style="display:none">
+                        <div class="control-row"><label>Arrow border width (px)</label><input type="number" id="arrowBorderWidth" value="1" min="1" max="6" onchange="update()"></div>
+                        <div class="color-row">
+                            <div class="color-chip"><span class="color-label">Arrow border color</span><input type="color" id="arrowBorderColor" value="#ffffff" onchange="update()"></div>
+                        </div>
+                        <div class="control-row" style="margin-top:10px"><label>Arrow border radius (px)</label><input type="number" id="arrowBorderRadiusPx" value="4" min="0" max="50" onchange="update()"></div>
+                    </div>
                 </div>
             </div>
 
@@ -643,6 +650,21 @@
                         <div class="color-chip"><span class="color-label">Overlay color</span><input type="color" id="overlayColor" value="#000000" onchange="update()"></div>
                     </div>
                     <div class="control-row" style="margin-top:10px"><label>Overlay opacity</label><input type="number" id="overlayOpacity" value="30" min="0" max="100" onchange="update()"><p class="helper-text">0 = transparent, 100 = solid</p></div>
+                </div>
+            </div>
+
+            <!-- IMAGE BORDER -->
+            <div class="group" data-group="imageBorder">
+                <div class="group-header" onclick="toggleGroup(this)">Image Border</div>
+                <div class="group-body">
+                    <div class="toggle-row"><label>Show border on images</label><input type="checkbox" id="imageBorder" onchange="update()"></div>
+                    <div id="imageBorderOptions" style="display:none">
+                        <div class="control-row"><label>Border width (px)</label><input type="number" id="imageBorderWidth" value="1" min="1" max="10" onchange="update()"></div>
+                        <div class="color-row">
+                            <div class="color-chip"><span class="color-label">Border color</span><input type="color" id="imageBorderColor" value="#ffffff" onchange="update()"></div>
+                        </div>
+                        <div class="control-row" style="margin-top:10px"><label>Border radius (px)</label><input type="number" id="imageBorderRadius" value="4" min="0" max="50" onchange="update()"></div>
+                    </div>
                 </div>
             </div>
 
@@ -932,8 +954,11 @@
         var aBgO = num('arrowBgOpacity');
         var aSize = num('arrowSize');
         var aRadius = val('arrowBorderRadius');
-        var aBorder = val('arrowBorder');
         var showA = checked('showArrows');
+        var aBorderOn = checked('arrowBorderToggle');
+        document.getElementById('arrowBorderOptions').style.display = aBorderOn ? 'block' : 'none';
+        var aBorder = aBorderOn ? (num('arrowBorderWidth') + 'px solid ' + val('arrowBorderColor')) : 'none';
+        if (aBorderOn) aRadius = num('arrowBorderRadiusPx') + 'px';
 
         [prevBtn, nextBtn].forEach(function(btn, idx) {
             btn.style.display = showA ? 'flex' : 'none';
@@ -1008,6 +1033,17 @@
         } else {
             overlay.style.display = 'none';
         }
+
+        var imgBorderOn = checked('imageBorder');
+        document.getElementById('imageBorderOptions').style.display = imgBorderOn ? 'block' : 'none';
+        var mockImg = document.getElementById('mockLbImg');
+        if (imgBorderOn) {
+            mockImg.style.border = num('imageBorderWidth') + 'px solid ' + val('imageBorderColor');
+            mockImg.style.borderRadius = num('imageBorderRadius') + 'px';
+        } else {
+            mockImg.style.border = '';
+            mockImg.style.borderRadius = '4px';
+        }
     }
 
     function addToolbarBtn(container, svg, color, size) {
@@ -1037,10 +1073,10 @@
         if (val('thumbnailActiveBorderColor') !== '#ffffff') config.thumbnailActiveBorderColor = val('thumbnailActiveBorderColor');
         if (num('thumbnailActiveBorderWidth') !== 2) config.thumbnailActiveBorderWidth = num('thumbnailActiveBorderWidth');
 
-        if (!checked('showZoom')) config.showZoom = false;
-        if (!checked('showDownload')) config.showDownload = false;
-        if (!checked('showCounter')) config.showCounter = false;
-        if (checked('showShare') === false) config.showShare = false;
+        if (checked('showZoom')) config.showZoom = true;
+        if (checked('showDownload')) config.showDownload = true;
+        if (checked('showCounter')) config.showCounter = true;
+        if (checked('showShare')) config.showShare = true;
         if (checked('showFullscreen')) config.showFullscreen = true;
         if (checked('showCaption')) config.showCaption = true;
         if (!checked('showArrows')) config.showArrows = false;
@@ -1048,9 +1084,20 @@
         var arrowBgRgba = hexToRgba(val('arrowBgColor'), num('arrowBgOpacity'));
         if (val('arrowColor') !== '#ffffff') config.arrowColor = val('arrowColor');
         if (arrowBgRgba !== 'rgba(255,255,255,0.12)') config.arrowBg = arrowBgRgba;
-        if (val('arrowBorder') !== 'none') config.arrowBorder = val('arrowBorder');
-        if (val('arrowBorderRadius') !== '50%') config.arrowBorderRadius = val('arrowBorderRadius');
+        if (checked('arrowBorderToggle')) {
+            config.arrowBorder = num('arrowBorderWidth') + 'px solid ' + val('arrowBorderColor');
+            if (num('arrowBorderRadiusPx') !== 4) config.arrowBorderRadius = num('arrowBorderRadiusPx') + 'px';
+            else config.arrowBorderRadius = '4px';
+        }
+        if (!checked('arrowBorderToggle') && val('arrowBorderRadius') !== '50%') config.arrowBorderRadius = val('arrowBorderRadius');
         if (num('arrowSize') !== 48) config.arrowSize = num('arrowSize');
+
+        if (checked('imageBorder')) {
+            config.imageBorder = true;
+            if (num('imageBorderWidth') !== 1) config.imageBorderWidth = num('imageBorderWidth');
+            if (val('imageBorderColor') !== '#ffffff') config.imageBorderColor = val('imageBorderColor');
+            if (num('imageBorderRadius') !== 4) config.imageBorderRadius = num('imageBorderRadius');
+        }
 
         var closeBgRgba = hexToRgba(val('closeBgColor'), num('closeBgOpacity'));
         if (val('closeColor') !== '#ffffff') config.closeColor = val('closeColor');
@@ -1125,19 +1172,29 @@
         if (num('thumbnailGap') !== 6) config.thumbnailGap = num('thumbnailGap');
         if (val('thumbnailActiveBorderColor') !== '#ffffff') config.thumbnailActiveBorderColor = val('thumbnailActiveBorderColor');
         if (num('thumbnailActiveBorderWidth') !== 2) config.thumbnailActiveBorderWidth = num('thumbnailActiveBorderWidth');
-        if (!checked('showZoom')) config.showZoom = false;
-        if (!checked('showDownload')) config.showDownload = false;
-        if (!checked('showCounter')) config.showCounter = false;
-        if (!checked('showShare')) config.showShare = false;
+        if (checked('showZoom')) config.showZoom = true;
+        if (checked('showDownload')) config.showDownload = true;
+        if (checked('showCounter')) config.showCounter = true;
+        if (checked('showShare')) config.showShare = true;
         if (checked('showFullscreen')) config.showFullscreen = true;
         if (checked('showCaption')) config.showCaption = true;
         if (!checked('showArrows')) config.showArrows = false;
         var arrowBgRgba = hexToRgba(val('arrowBgColor'), num('arrowBgOpacity'));
         if (val('arrowColor') !== '#ffffff') config.arrowColor = val('arrowColor');
         if (arrowBgRgba !== 'rgba(255,255,255,0.12)') config.arrowBg = arrowBgRgba;
-        if (val('arrowBorder') !== 'none') config.arrowBorder = val('arrowBorder');
-        if (val('arrowBorderRadius') !== '50%') config.arrowBorderRadius = val('arrowBorderRadius');
+        if (checked('arrowBorderToggle')) {
+            config.arrowBorder = num('arrowBorderWidth') + 'px solid ' + val('arrowBorderColor');
+            if (num('arrowBorderRadiusPx') !== 4) config.arrowBorderRadius = num('arrowBorderRadiusPx') + 'px';
+            else config.arrowBorderRadius = '4px';
+        }
+        if (!checked('arrowBorderToggle') && val('arrowBorderRadius') !== '50%') config.arrowBorderRadius = val('arrowBorderRadius');
         if (num('arrowSize') !== 48) config.arrowSize = num('arrowSize');
+        if (checked('imageBorder')) {
+            config.imageBorder = true;
+            if (num('imageBorderWidth') !== 1) config.imageBorderWidth = num('imageBorderWidth');
+            if (val('imageBorderColor') !== '#ffffff') config.imageBorderColor = val('imageBorderColor');
+            if (num('imageBorderRadius') !== 4) config.imageBorderRadius = num('imageBorderRadius');
+        }
         var closeBgRgba = hexToRgba(val('closeBgColor'), num('closeBgOpacity'));
         if (val('closeColor') !== '#ffffff') config.closeColor = val('closeColor');
         if (closeBgRgba !== 'rgba(0,0,0,0)') config.closeBg = closeBgRgba;
