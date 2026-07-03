@@ -520,6 +520,7 @@
                     <div class="toggle-row"><label>Show share</label><input type="checkbox" id="showShare" onchange="update()"></div>
                     <div class="toggle-row"><label>Show fullscreen</label><input type="checkbox" id="showFullscreen" onchange="update()"></div>
                     <div class="toggle-row"><label>Show caption</label><input type="checkbox" id="showCaption" onchange="update()"></div>
+                    <div class="toggle-row"><label>Show toggle thumbnails</label><input type="checkbox" id="showToggleThumbnails" onchange="update()"></div>
                     <div class="color-row" style="margin-top:8px">
                         <div class="color-chip"><span class="color-label">Toolbar icon color</span><input type="color" id="toolbarIconColor" value="#ffffff" onchange="update()"></div>
                     </div>
@@ -1079,6 +1080,7 @@
         if (checked('showShare')) config.showShare = true;
         if (checked('showFullscreen')) config.showFullscreen = true;
         if (checked('showCaption')) config.showCaption = true;
+        if (checked('showToggleThumbnails')) config.showToggleThumbnails = true;
         if (!checked('showArrows')) config.showArrows = false;
 
         var arrowBgRgba = hexToRgba(val('arrowBgColor'), num('arrowBgOpacity'));
@@ -1178,6 +1180,7 @@
         if (checked('showShare')) config.showShare = true;
         if (checked('showFullscreen')) config.showFullscreen = true;
         if (checked('showCaption')) config.showCaption = true;
+        if (checked('showToggleThumbnails')) config.showToggleThumbnails = true;
         if (!checked('showArrows')) config.showArrows = false;
         var arrowBgRgba = hexToRgba(val('arrowBgColor'), num('arrowBgOpacity'));
         if (val('arrowColor') !== '#ffffff') config.arrowColor = val('arrowColor');

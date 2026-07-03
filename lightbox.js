@@ -36,6 +36,7 @@
     showCounter: false,
     showFullscreen: false,
     showShare: false,
+    showToggleThumbnails: false,
 
     showArrows: true,
     arrowColor: '#ffffff',
@@ -471,7 +472,7 @@
         }
 
         /* thumbnails toggle */
-        if (cfg.thumbnails) {
+        if (cfg.thumbnails && cfg.showToggleThumbnails) {
           pswp.ui.registerElement({
             name: 'sdl-thumbs-toggle',
             order: 11,
